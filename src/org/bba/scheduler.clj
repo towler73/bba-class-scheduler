@@ -22,7 +22,6 @@
         td-rows (s/select (s/descendant (s/tag :td)) site-htree)
         not-nil-content (filter #(not (nil? (:content %))))
         trimmed-content (map #(-> % :content first))]
-
     (transduce (comp not-nil-content trimmed-content find-classes classes-to-map) conj td-rows)))
 
 (def url "https://docs.google.com/spreadsheets/u/4/d/e/2PACX-1vR5jen9QsaXcLbZbY81HE3LedUsR4UQjhBAnQCheFUp0DtK0b7bPurlVDJH8RjTFDNdzJ0uuIChWR28/pubhtml?gid=1396882618&single=true&urp=gmail_link")
@@ -33,10 +32,21 @@
       (binding [*out* w]
         (pr classes-web-page)))))
 
-(comment (parse-classes url))
-
 (comment
   (def classes (parse-classes url)))
+
+;; Steps to parse classes
+(comment (def webpage (client/get url)))
+(comment (def parsed-webpage (parse (:body webpage))))
+(comment (def hickory-parsed (as-hickory parsed-webpage)))
+(comment (def td-tags (s/select (s/descendant (s/tag :td)) hickory-parsed)))
+(comment (def non-nil-td-tags (filter #(not (nil? (:content %))) td-tags)))
+(comment (def just-the-content (map #(-> % :content first) non-nil-td-tags)))
+(comment (def just-the-classes (filter #(re-find #"- S1|- S2|- FY" %) just-the-content)))
+(comment (def classes-as-map (map (fn [class]
+                                    (let [[_ class term block] (re-matches #"(.*) - (S1|S2|FY)(.*)" class)]
+                                      {:class class :term term :block block})) just-the-classes)))
+
 
 ;; Schedule classes
 
