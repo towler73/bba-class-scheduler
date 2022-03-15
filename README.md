@@ -18,7 +18,7 @@ Clone this repository https://github.com/towler73/bba-class-scheduler
 To run the schedule you need 2 things:
  1. URL for the Master Schedule
  2. A file with your desired classes.  See desired-classes-sample.edn file in the root of source code for example.
-    1. There are 3 keys you can define for each classes
+    1. There are 3 keys you can define for each classes<br>
     `:class` Regex of class name<br>
     `:block` Regex of block<br>
     `:term` Reex of term
@@ -31,11 +31,11 @@ For Example:
 
     $ clojure -M:run-m "https://docs.google.com/spreadsheets/u/4/d/e/2PACX-1vR5jen9QsaXcLbZbY81HE3LedUsR4UQjhBAnQCheFUp0DtK0b7bPurlVDJH8RjTFDNdzJ0uuIChWR28/pubhtml?gid=1396882618&single=true&urp=gmail_link" desired-classes-sample.edn
 
-Run the project's tests (they'll fail until you edit them):
+Run the project's tests:
 
     $ clojure -T:build test
 
-Run the project's CI pipeline and build an uberjar (this will fail until you edit the tests to pass):
+Run the project's CI pipeline and build an uberjar:
 
     $ clojure -T:build ci
 
