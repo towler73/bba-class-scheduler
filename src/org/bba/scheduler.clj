@@ -1,8 +1,11 @@
 (ns org.bba.scheduler
   (:require [hickory.core :refer [parse as-hickory]]
             [hickory.select :as s]
-            [clj-http.client :as client])
-  (:gen-class))
+            [clj-http.client :as client]
+            [clojure.java.io :as io]
+            [clojure.edn :as edn])
+  (:gen-class)
+  (:import (java.io PushbackReader)))
 
 ;; Scrape classes from BBA website
 
@@ -24,6 +27,12 @@
 
 (def url "https://docs.google.com/spreadsheets/u/4/d/e/2PACX-1vR5jen9QsaXcLbZbY81HE3LedUsR4UQjhBAnQCheFUp0DtK0b7bPurlVDJH8RjTFDNdzJ0uuIChWR28/pubhtml?gid=1396882618&single=true&urp=gmail_link")
 
+(defn save-class-webpage-to-file [url]
+  (let [classes-web-page (-> (client/get url) :body)]
+    (with-open [w (clojure.java.io/writer "classes-webpage.edn")]
+      (binding [*out* w]
+        (pr classes-web-page)))))
+
 (comment (parse-classes url))
 
 (comment
@@ -43,18 +52,16 @@
 (defn find-requested-classes [all-classes desired-classes]
   (flatten (map #(find-classes-in-class-list all-classes %) desired-classes)))
 
-(defrecord Schedule [AB C D E F DE])
-
 (def valid-termblocks #{"S1AB" "S2AB" "S1C" "S2C" "FYD" "FYE" "S1F" "S2F" "S1DE" "S2DE"})
 
 (defn contains-block? [schedule termblock]
   (let [schedule-contains-block? (some-fn #(contains? schedule %))]
-    (cond ;; TODO switch to case
-      (= "FYD" termblock) (schedule-contains-block? "FYD" "S1DE" "S2DE")
-      (= "FYE" termblock) (schedule-contains-block? "FYE" "S1DE" "S2DE")
-      (= "S1DE" termblock) (schedule-contains-block? "FYD" "FYE" "S1DE")
-      (= "S2DE" termblock) (schedule-contains-block? "FYD" "FYE" "S2DE")
-      :else (contains? schedule termblock))))
+    (case termblock
+      "FYD" (schedule-contains-block? "FYD" "S1DE" "S2DE")
+      "FYE" (schedule-contains-block? "FYE" "S1DE" "S2DE")
+      "S1DE" (schedule-contains-block? "FYD" "FYE" "S1DE")
+      "S2DE" (schedule-contains-block? "FYD" "FYE" "S2DE")
+      (contains? schedule termblock))))
 
 (defn contains-class? [schedule {:keys [criteria] :as class-map}]
   (apply (some-fn #(= criteria (:criteria %))) (vals schedule)))
@@ -92,7 +99,6 @@
                                                 {:schedule schedule}))
                                          schedules))]
         (if (every? empty? (map :class-views schedules))
-          ;schedules
           (distinct (map :schedule schedules))
           (recur new-schedules))))))
 
@@ -111,10 +117,24 @@
 (comment (def schedules (schedule rc)))
 (comment (filter #(= 8 (count (keys %))) schedules))
 
+(defn read-file [file]
+  (edn/read (PushbackReader. (io/reader file))))
+
+
 (defn -main
-  "I don't do a whole lot ... yet."
+  "Run the scheduler
+    Arguments
+      1: url of class schedule
+      2: file with desired classes (Regex allowed, see: desired-classes-sample.edn)"
   [& args]
-  (println {:name (first args)}))
+  (let [url (first args)
+        desired-classes-from-file (read-file (second args))
+        num-of-desired-classes (count desired-classes-from-file)
+        all-classes (parse-classes url)
+        matching-classes (find-requested-classes all-classes desired-classes)
+        schedules (schedule matching-classes)
+        full-schedules (filter #(= num-of-desired-classes (count (keys %))) schedules)]
+    (clojure.pprint/pprint full-schedules)))
 
 
 
