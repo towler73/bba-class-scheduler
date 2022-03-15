@@ -6,7 +6,7 @@ Class schedule can be found here: [Master Classes Schedule 2022-2023](https://do
 
 ## Installation
 
-Download from https://github.com/org.bba/scheduler
+Download from https://github.com/towler73/bba-class-scheduler
 
 ## Usage
 
