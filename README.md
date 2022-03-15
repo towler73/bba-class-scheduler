@@ -6,7 +6,12 @@ Class schedule can be found here: [Master Classes Schedule 2022-2023](https://do
 
 ## Installation
 
-Download from https://github.com/towler73/bba-class-scheduler
+Install clojure
+https://clojure.org/guides/getting_started
+
+Clone this repository https://github.com/towler73/bba-class-scheduler
+
+    $ git clone https://github.com/towler73/bba-class-scheduler.git
 
 ## Usage
 
