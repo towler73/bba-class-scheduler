@@ -18,6 +18,10 @@
 ;; define a variable
 (def nums [1 2 3 4])
 
+(first nums)
+(last nums)
+(nth nums 2)
+
 ;; Mapping over a vector
 (map (fn [n] (+ n 1)) nums)
 
@@ -40,6 +44,10 @@
 (keys mymap)
 
 (vals mymap)
+
+(:a mymap)
+
+(:d mymap)
 
 (map inc (vals mymap))
 

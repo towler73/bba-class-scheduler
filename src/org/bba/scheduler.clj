@@ -48,19 +48,29 @@
                                       {:class class :term term :block block})) just-the-classes)))
 
 
-;; Schedule classes
+;; Find classes
 
-(defn find-classes-in-class-list
-  ([class-list {:keys [class term block] :as criteria}]
+(defn find-classes-in-class-list [class-list {:keys [class term block] :as criteria}]
    (let [class-filter (filter #(re-find (re-pattern class) (:class %)))
          term-filter (filter  #(if (not (nil? term)) (re-find (re-pattern term) (:term %)) true))
          block-filter (filter #(if (not (nil? block)) (re-find (re-pattern block) (:block %)) true))
          add-criteria (map #(assoc % :criteria criteria))
          transducer-filter (comp class-filter term-filter block-filter add-criteria)]
-     (transduce transducer-filter conj class-list))))
+     (transduce transducer-filter conj class-list)))
 
-(defn find-requested-classes [all-classes desired-classes]
+(defn find-desired-classes [all-classes desired-classes]
   (flatten (map #(find-classes-in-class-list all-classes %) desired-classes)))
+
+
+(comment (filter #(re-find (re-pattern "Honors Spanish 4/5") %) ["Honors German 4/5 Spring"
+                                                                 "Honors Spanish 4/5 Fall"
+                                                                 "Honors Spanish 4/5 Spring"
+                                                                 "Honors French 4/5 Spring"
+                                                                 "CP Spanish 1"]))
+
+(comment (re-matches #"(.*) - (S1|S2|FY)(.*)" "CP Medieval History - S1F"))
+
+;; Schedule classes
 
 (def valid-termblocks #{"S1AB" "S2AB" "S1C" "S2C" "FYD" "FYE" "S1F" "S2F" "S1DE" "S2DE"})
 
@@ -122,10 +132,25 @@
                       {:class "Woodworking Studio"}
                       {:class "Personal Fitness:  Foundations \\(She/Her/They\\)"}])
 
+(def desired-classes-2 [{:class "English Language Arts 1"}
+                        {:class "CP Algebra 1"}
+                        {:class "Cinematography"}
+                        {:class "CP Biology"}
+                        {:class "Ceramics: Foundations"}
+                        {:class "CP French 2/3"}
+                        {:class "CP Psychology"}
+                        {:class "CP English 2: Literature & Comp"}])
+
+
 (comment (def all-classes (parse-classes url)))
-(comment (def rc (find-requested-classes all-classes desired-classes)))
-(comment (def schedules (schedule rc)))
+
+(comment (def all-desired-classes (find-desired-classes all-classes desired-classes)))
+(comment (def schedules (schedule all-desired-classes)))
 (comment (filter #(= 8 (count (keys %))) schedules))
+
+(comment (def all-desired-classes-2 (find-desired-classes all-classes desired-classes-2)))
+(comment (def schedules-2 (schedule all-desired-classes-2)))
+(comment (filter #(= 8 (count (keys %))) schedules-2))
 
 (defn read-file [file]
   (edn/read (PushbackReader. (io/reader file))))
@@ -141,7 +166,7 @@
         desired-classes-from-file (read-file (second args))
         num-of-desired-classes (count desired-classes-from-file)
         all-classes (parse-classes url)
-        matching-classes (find-requested-classes all-classes desired-classes)
+        matching-classes (find-desired-classes all-classes desired-classes)
         schedules (schedule matching-classes)
         full-schedules (filter #(= num-of-desired-classes (count (keys %))) schedules)]
     (clojure.pprint/pprint full-schedules)))
